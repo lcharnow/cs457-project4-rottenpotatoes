@@ -5,10 +5,18 @@ class Movie < ApplicationRecord
   end
 
   # Return movies that match the selected ratings
-  def self.with_ratings(ratings_list)
+  def self.with_ratings(ratings_list, sort_by = 'title')
     if ratings_list.nil? || ratings_list.empty?
-      return Movie.all
+        movies= Movie.all
+    else
+        movies= Movie.where(rating: ratings_list)
     end
-    Movie.where(rating: ratings_list)
+
+   if sort_by == 'release_date'
+    movies.order(:release_date)
+   else
+    movies.order(:title) 
+   end
+
   end
 end
