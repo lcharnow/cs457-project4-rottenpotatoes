@@ -5,23 +5,53 @@ class MoviesController < ApplicationController
   def index
     @all_ratings = Movie.all_ratings
 
-  if params[:ratings].present?
-    @ratings_to_show = params[:ratings].keys
+  if params[:filters_submitted].present?  
+    if params[:ratings].present?
+      @ratings_to_show = params[:ratings].keys
+    else
+      @ratings_to_show = @all_ratings
+    end
+
+    if @ratings_to_show.empty?
+      @ratings_to_show = @all_ratings
+    end
+
+
+    if ['title', 'release_date'].include?(params[:sort_by])
+      @sort_by = params[:sort_by]
+    else
+      @sort_by = 'title'
+    end
+
+    session[:ratings_to_show]= @ratings_to_show
+    session[:sort_by]= @sort_by
+
+  elsif params[:ratings].present? || params[:sort_by].present?
+    # Handle URLs that explicitly include settings.
+    if params[:ratings].present?
+      @ratings_to_show = params[:ratings].keys
+    else
+      @ratings_to_show = session[:ratings_to_show] || @all_ratings
+    end
+
+    if ['title', 'release_date'].include?(params[:sort_by])
+      @sort_by = params[:sort_by]
+    else
+      @sort_by = session[:sort_by] || 'title'
+    end
+
+    session[:ratings_to_show] = @ratings_to_show
+    session[:sort_by] = @sort_by
+
   else
-    @ratings_to_show = @all_ratings
+    # No settings in the URL: restore saved settings.
+    @ratings_to_show = session[:ratings_to_show] || @all_ratings
+    @sort_by = session[:sort_by] || 'title'
   end
-
-  if @ratings_to_show.empty?
-    @ratings_to_show = @all_ratings
-  end
-
-  @sort_by= params[:sort_by]
-  unless ['title', 'release_date'].include?(@sort_by)
-    @sort_by= 'title'
-  end  
 
   @movies = Movie.with_ratings(@ratings_to_show, @sort_by)
-  end
+end
+
 
   # GET /movies/1 or /movies/1.json
   def show
